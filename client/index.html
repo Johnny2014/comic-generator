@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="免费在线四格漫画生成器 - 上传图片，选择布局，添加文字气泡，一键生成漫画与视频" />
+  <title>四格漫画生成器 | Comic Strip Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-inner">
+        <h1 class="logo">
+          <span class="logo-icon">🎨</span>
+          <span class="logo-text">四格漫画</span>
+          <span class="logo-badge">Generator</span>
+        </h1>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Upload Section -->
+      <section class="section upload-section" id="upload-section">
+        <h2 class="section-title">
+          <span class="section-icon">📸</span> 上传图片
+          <span class="section-hint">支持拖拽 / 点击 / 拍摄，最多 4 张</span>
+        </h2>
+        <div class="upload-grid" id="upload-grid">
+          <!-- 4 upload slots will be rendered by JS -->
+        </div>
+      </section>
+
+      <!-- Layout Section -->
+      <section class="section layout-section" id="layout-section">
+        <h2 class="section-title">
+          <span class="section-icon">📐</span> 选择布局
+        </h2>
+        <div class="layout-options" id="layout-options">
+          <!-- Layout options rendered by JS -->
+        </div>
+      </section>
+
+      <!-- Style Section -->
+      <section class="section style-section" id="style-section">
+        <h2 class="section-title">
+          <span class="section-icon">🎭</span> 漫画风格
+        </h2>
+        <div class="style-controls" id="style-controls">
+          <!-- Border styles -->
+          <div class="control-group">
+            <h3 class="control-label">边框样式</h3>
+            <div class="border-options" id="border-options"></div>
+          </div>
+          <!-- Filters -->
+          <div class="control-group">
+            <h3 class="control-label">滤镜效果</h3>
+            <div class="filter-options" id="filter-options"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Canvas Preview -->
+      <section class="section preview-section" id="preview-section">
+        <h2 class="section-title">
+          <span class="section-icon">🖼️</span> 漫画预览
+          <span class="section-hint">点击格子添加文字气泡</span>
+        </h2>
+        <div class="canvas-container" id="canvas-container">
+          <canvas id="comic-canvas"></canvas>
+        </div>
+      </section>
+
+      <!-- Export Section -->
+      <section class="section export-section" id="export-section">
+        <h2 class="section-title">
+          <span class="section-icon">💾</span> 导出
+        </h2>
+        <div class="export-buttons">
+          <button class="btn btn-primary btn-export" id="btn-download-image">
+            <span class="btn-icon">🖼️</span> 下载图片
+          </button>
+          <button class="btn btn-accent btn-export" id="btn-generate-video">
+            <span class="btn-icon">🎬</span> 生成视频 (4分钟)
+          </button>
+          <button class="btn btn-secondary btn-export" id="btn-stitch-video">
+            <span class="btn-icon">✂️</span> 拼接视频
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Speech Bubble Modal -->
+    <div class="modal-overlay" id="bubble-modal" style="display:none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>添加文字气泡</h3>
+          <button class="modal-close" id="bubble-modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>气泡类型</label>
+            <div class="bubble-type-options" id="bubble-type-options">
+              <button class="bubble-type-btn active" data-type="speech">💬 对话</button>
+              <button class="bubble-type-btn" data-type="thought">💭 思考</button>
+              <button class="bubble-type-btn" data-type="shout">💥 呐喊</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>文字内容</label>
+            <textarea id="bubble-text" placeholder="输入文字..." rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>字号</label>
+            <input type="range" id="bubble-font-size" min="12" max="48" value="20" />
+            <span id="bubble-font-size-val">20px</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="bubble-cancel">取消</button>
+          <button class="btn btn-primary" id="bubble-confirm">确定</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Progress Modal -->
+    <div class="modal-overlay" id="video-modal" style="display:none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>🎬 生成视频中...</h3>
+        </div>
+        <div class="modal-body">
+          <div class="progress-bar-container">
+            <div class="progress-bar" id="video-progress-bar"></div>
+          </div>
+          <p class="progress-text" id="video-progress-text">准备中...</p>
+          <video id="video-preview" style="display:none;" controls></video>
+        </div>
+        <div class="modal-footer" id="video-modal-footer" style="display:none;">
+          <button class="btn btn-secondary" id="video-close">关闭</button>
+          <button class="btn btn-primary" id="video-download">下载视频</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Stitch Modal -->
+    <div class="modal-overlay" id="stitch-modal" style="display:none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>✂️ 选择要拼接的 2 格</h3>
+          <button class="modal-close" id="stitch-modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="stitch-grid" id="stitch-grid"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="stitch-cancel">取消</button>
+          <button class="btn btn-primary" id="stitch-confirm">开始拼接</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
